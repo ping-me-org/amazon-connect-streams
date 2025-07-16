@@ -11682,32 +11682,92 @@ function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e 
  */
 
 /**
+ * Replaces logos in the CCP iframe
+ * @param {Document} iframeDoc - The iframe document
+ */
+function replaceLogo(iframeDoc) {
+  try {
+    // Find and replace FlexVerticalCenterContainer logos
+    var flexContainers = iframeDoc.querySelectorAll('[class*="FlexVerticalCenterContainer"]');
+    flexContainers.forEach(function (container) {
+      // Remove existing SVGs
+      var svgs = container.querySelectorAll("svg");
+      svgs.forEach(function (svg) {
+        return svg.remove();
+      });
+
+      // Create custom logo element
+      var logoImg = iframeDoc.createElement("img");
+      logoImg.src = "./ping_q_logo.svg";
+      logoImg.className = "ping-custom-logo";
+      logoImg.alt = "Ping Logo";
+      logoImg.style.cssText = "\n        max-width: 120px !important;\n        max-height: 40px !important;\n        width: auto !important;\n        height: auto !important;\n      ";
+
+      // Replace content
+      container.innerHTML = "";
+      container.appendChild(logoImg);
+    });
+
+    // Also look for other common logo selectors
+    var logoSelectors = ['svg[class*="logo"]', 'img[alt*="amazon" i]', 'img[alt*="aws" i]', ".amazon-logo", ".aws-logo"];
+    logoSelectors.forEach(function (selector) {
+      var elements = iframeDoc.querySelectorAll(selector);
+      elements.forEach(function (element) {
+        var logoImg = iframeDoc.createElement("img");
+        logoImg.src = "./ping_q_logo.svg";
+        logoImg.className = "ping-custom-logo";
+        logoImg.alt = "Ping Logo";
+        logoImg.style.cssText = element.style.cssText + "\n          max-width: 120px !important;\n          max-height: 40px !important;\n          width: auto !important;\n          height: auto !important;\n        ";
+        element.parentNode.replaceChild(logoImg, element);
+      });
+    });
+    console.log("✅ Custom logos replaced successfully");
+  } catch (error) {
+    console.warn("⚠️ Could not replace logos:", error.message);
+  }
+}
+
+/**
  * Injects custom CSS into the CCP iframe
  * @param {HTMLIFrameElement} iframe - The CCP iframe element
  */
 function injectCustomStyles(iframe) {
   try {
     // Wait for iframe to load
-    iframe.addEventListener('load', function () {
+    iframe.addEventListener("load", function () {
       try {
         var iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
 
         // Create style element
-        var styleElement = iframeDoc.createElement('style');
-        styleElement.type = 'text/css';
+        var styleElement = iframeDoc.createElement("style");
+        styleElement.type = "text/css";
         styleElement.innerHTML = getCustomCSS();
 
         // Add to iframe head
-        var head = iframeDoc.head || iframeDoc.getElementsByTagName('head')[0];
+        var head = iframeDoc.head || iframeDoc.getElementsByTagName("head")[0];
         head.appendChild(styleElement);
-        console.log('✅ Custom CCP styles injected successfully');
+
+        // Replace logos after a short delay to ensure DOM is ready
+        setTimeout(function () {
+          replaceLogo(iframeDoc);
+
+          // Set up mutation observer to catch dynamically added logos
+          var observer = new MutationObserver(function () {
+            replaceLogo(iframeDoc);
+          });
+          observer.observe(iframeDoc.body, {
+            childList: true,
+            subtree: true
+          });
+        }, 1000);
+        console.log("✅ Custom CCP styles injected successfully");
       } catch (error) {
-        console.warn('⚠️ Could not inject custom styles into CCP iframe (cross-origin restriction):', error.message);
+        console.warn("⚠️ Could not inject custom styles into CCP iframe (cross-origin restriction):", error.message);
         // This is expected for cross-origin iframes
       }
     });
   } catch (error) {
-    console.error('❌ Error setting up style injection:', error);
+    console.error("❌ Error setting up style injection:", error);
   }
 }
 
@@ -11715,7 +11775,7 @@ function injectCustomStyles(iframe) {
  * Returns the custom CSS string
  */
 function getCustomCSS() {
-  return "\n/* Custom CCP Styling */\n/* This CSS will be injected into the CCP iframe to customize its appearance */\n\n/* Main CCP container */\n.ccp-container {\n  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;\n  background-color: #f8f9fa !important;\n  border-radius: 8px !important;\n  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1) !important;\n}\n\n/* Header styling */\n.ccp-header {\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;\n  color: white !important;\n  border-radius: 8px 8px 0 0 !important;\n  padding: 12px !important;\n}\n\n/* Button styling */\n.ccp-button, button {\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;\n  border: none !important;\n  border-radius: 6px !important;\n  color: white !important;\n  padding: 8px 16px !important;\n  font-weight: 500 !important;\n  transition: all 0.3s ease !important;\n  cursor: pointer !important;\n}\n\n.ccp-button:hover, button:hover {\n  transform: translateY(-1px) !important;\n  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4) !important;\n}\n\n/* Accept call button - green */\n.ccp-button.accept, button[data-testid*=\"accept\"], button[aria-label*=\"accept\" i] {\n  background: linear-gradient(135deg, #48bb78 0%, #38a169 100%) !important;\n}\n\n/* Reject/End call button - red */\n.ccp-button.reject, .ccp-button.end, button[data-testid*=\"reject\"], button[data-testid*=\"end\"], button[aria-label*=\"end\" i], button[aria-label*=\"reject\" i] {\n  background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%) !important;\n}\n\n/* Hold button - orange */\n.ccp-button.hold, button[data-testid*=\"hold\"], button[aria-label*=\"hold\" i] {\n  background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%) !important;\n}\n\n/* Mute button styling */\n.ccp-button.mute, button[data-testid*=\"mute\"], button[aria-label*=\"mute\" i] {\n  background: linear-gradient(135deg, #a0aec0 0%, #718096 100%) !important;\n}\n\n/* Status indicators */\n.ccp-status {\n  border-radius: 20px !important;\n  padding: 4px 12px !important;\n  font-size: 12px !important;\n  font-weight: 600 !important;\n  text-transform: uppercase !important;\n  letter-spacing: 0.5px !important;\n}\n\n/* Input fields */\n.ccp-input, input[type=\"text\"], input[type=\"tel\"], input[type=\"number\"] {\n  border: 2px solid #e2e8f0 !important;\n  border-radius: 6px !important;\n  padding: 8px 12px !important;\n  font-size: 14px !important;\n  transition: border-color 0.3s ease !important;\n}\n\n/* Phone number display */\n.ccp-phone-number {\n  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace !important;\n  font-size: 16px !important;\n  font-weight: 600 !important;\n  color: #2d3748 !important;\n  background-color: #f7fafc !important;\n  padding: 8px 12px !important;\n  border-radius: 6px !important;\n  border: 1px solid #e2e8f0 !important;\n}\n\n/* Custom scrollbar */\n::-webkit-scrollbar {\n  width: 8px !important;\n}\n\n::-webkit-scrollbar-track {\n  background: #f1f1f1 !important;\n  border-radius: 4px !important;\n}\n\n::-webkit-scrollbar-thumb {\n  background: #c1c1c1 !important;\n  border-radius: 4px !important;\n}\n\n/* Animation for state changes */\n.ccp-state-transition {\n  transition: all 0.3s ease !important;\n}\n\n/* Custom loading spinner */\n.ccp-loading {\n  border: 3px solid #f3f3f3 !important;\n  border-top: 3px solid #667eea !important;\n  border-radius: 50% !important;\n  width: 30px !important;\n  height: 30px !important;\n  animation: spin 1s linear infinite !important;\n  margin: 20px auto !important;\n}\n\n@keyframes spin {\n  0% { transform: rotate(0deg); }\n  100% { transform: rotate(360deg); }\n}\n";
+  return "\n/* Custom CCP Styling */\n/* This CSS will be injected into the CCP iframe to customize its appearance */\n\n/* Main CCP container */\n.ccp-container {\n  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;\n  background-color: #f8f9fa !important;\n  border-radius: 8px !important;\n  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1) !important;\n}\n\n/* Header styling */\n.ccp-header {\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;\n  color: white !important;\n  border-radius: 8px 8px 0 0 !important;\n  padding: 12px !important;\n}\n\n/* Button styling */\n.ccp-button, button {\n  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;\n  border: none !important;\n  border-radius: 6px !important;\n  color: white !important;\n  padding: 8px 16px !important;\n  font-weight: 500 !important;\n  transition: all 0.3s ease !important;\n  cursor: pointer !important;\n}\n\n.ccp-button:hover, button:hover {\n  transform: translateY(-1px) !important;\n  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4) !important;\n}\n\n/* Accept call button - green */\n.ccp-button.accept, button[data-testid*=\"accept\"], button[aria-label*=\"accept\" i] {\n  background: linear-gradient(135deg, #48bb78 0%, #38a169 100%) !important;\n}\n\n/* Reject/End call button - red */\n.ccp-button.reject, .ccp-button.end, button[data-testid*=\"reject\"], button[data-testid*=\"end\"], button[aria-label*=\"end\" i], button[aria-label*=\"reject\" i] {\n  background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%) !important;\n}\n\n/* Hold button - orange */\n.ccp-button.hold, button[data-testid*=\"hold\"], button[aria-label*=\"hold\" i] {\n  background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%) !important;\n}\n\n/* Mute button styling */\n.ccp-button.mute, button[data-testid*=\"mute\"], button[aria-label*=\"mute\" i] {\n  background: linear-gradient(135deg, #a0aec0 0%, #718096 100%) !important;\n}\n\n/* Status indicators */\n.ccp-status {\n  border-radius: 20px !important;\n  padding: 4px 12px !important;\n  font-size: 12px !important;\n  font-weight: 600 !important;\n  text-transform: uppercase !important;\n  letter-spacing: 0.5px !important;\n}\n\n/* Input fields */\n.ccp-input, input[type=\"text\"], input[type=\"tel\"], input[type=\"number\"] {\n  border: 2px solid #e2e8f0 !important;\n  border-radius: 6px !important;\n  padding: 8px 12px !important;\n  font-size: 14px !important;\n  transition: border-color 0.3s ease !important;\n}\n\n/* Phone number display */\n.ccp-phone-number {\n  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace !important;\n  font-size: 16px !important;\n  font-weight: 600 !important;\n  color: #2d3748 !important;\n  background-color: #f7fafc !important;\n  padding: 8px 12px !important;\n  border-radius: 6px !important;\n  border: 1px solid #e2e8f0 !important;\n}\n\n/* Custom scrollbar */\n::-webkit-scrollbar {\n  width: 8px !important;\n}\n\n::-webkit-scrollbar-track {\n  background: #f1f1f1 !important;\n  border-radius: 4px !important;\n}\n\n::-webkit-scrollbar-thumb {\n  background: #c1c1c1 !important;\n  border-radius: 4px !important;\n}\n\n/* Logo replacement styles */\n.ping-custom-logo {\n  max-width: 120px !important;\n  max-height: 40px !important;\n  width: auto !important;\n  height: auto !important;\n}\n\n/* Hide default Amazon/AWS logos */\n.amazon-logo, .aws-logo, [class*=\"amazon\"], [class*=\"aws\"],\nsvg[class*=\"logo\"], img[alt*=\"amazon\" i], img[alt*=\"aws\" i],\n[class*=\"FlexVerticalCenterContainer\"] svg {\n  display: none !important;\n}\n\n/* Replace FlexVerticalCenterContainer content */\n[class*=\"FlexVerticalCenterContainer\"]::before {\n  content: \"\" !important;\n  display: inline-block !important;\n  width: 120px !important;\n  height: 40px !important;\n  background-image: url('./ping_q_logo.svg') !important;\n  background-size: contain !important;\n  background-repeat: no-repeat !important;\n  background-position: center !important;\n}\n\n/* Animation for state changes */\n.ccp-state-transition {\n  transition: all 0.3s ease !important;\n}\n\n/* Custom loading spinner */\n.ccp-loading {\n  border: 3px solid #f3f3f3 !important;\n  border-top: 3px solid #667eea !important;\n  border-radius: 50% !important;\n  width: 30px !important;\n  height: 30px !important;\n  animation: spin 1s linear infinite !important;\n  margin: 20px auto !important;\n}\n\n@keyframes spin {\n  0% { transform: rotate(0deg); }\n  100% { transform: rotate(360deg); }\n}\n";
 }
 
 /**
@@ -11727,7 +11787,7 @@ function styleContainer(container) {
 
   // Apply custom styles to the container
   container.style.cssText = "\n    border-radius: 8px;\n    overflow: hidden;\n    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);\n    background: #ffffff;\n    border: 1px solid #e2e8f0;\n  ";
-  console.log('✅ Custom container styles applied');
+  console.log("✅ Custom container styles applied");
 }
 
 // Export functions
@@ -11737,7 +11797,7 @@ if ( true && module.exports) {
     styleContainer: styleContainer,
     getCustomCSS: getCustomCSS
   };
-} else if (typeof window !== 'undefined') {
+} else if (typeof window !== "undefined") {
   window.CCPStyleInjector = {
     injectCustomStyles: injectCustomStyles,
     styleContainer: styleContainer,

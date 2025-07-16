@@ -4,33 +4,119 @@
  */
 
 /**
+ * Replaces logos in the CCP iframe
+ * @param {Document} iframeDoc - The iframe document
+ */
+function replaceLogo(iframeDoc) {
+  try {
+    // Find and replace FlexVerticalCenterContainer logos
+    const flexContainers = iframeDoc.querySelectorAll(
+      '[class*="FlexVerticalCenterContainer"]'
+    );
+    flexContainers.forEach((container) => {
+      // Remove existing SVGs
+      const svgs = container.querySelectorAll("svg");
+      svgs.forEach((svg) => svg.remove());
+
+      // Create custom logo element
+      const logoImg = iframeDoc.createElement("img");
+      logoImg.src = "./ping_q_logo.svg";
+      logoImg.className = "ping-custom-logo";
+      logoImg.alt = "Ping Logo";
+      logoImg.style.cssText = `
+        max-width: 120px !important;
+        max-height: 40px !important;
+        width: auto !important;
+        height: auto !important;
+      `;
+
+      // Replace content
+      container.innerHTML = "";
+      container.appendChild(logoImg);
+    });
+
+    // Also look for other common logo selectors
+    const logoSelectors = [
+      'svg[class*="logo"]',
+      'img[alt*="amazon" i]',
+      'img[alt*="aws" i]',
+      ".amazon-logo",
+      ".aws-logo",
+    ];
+
+    logoSelectors.forEach((selector) => {
+      const elements = iframeDoc.querySelectorAll(selector);
+      elements.forEach((element) => {
+        const logoImg = iframeDoc.createElement("img");
+        logoImg.src = "./ping_q_logo.svg";
+        logoImg.className = "ping-custom-logo";
+        logoImg.alt = "Ping Logo";
+        logoImg.style.cssText =
+          element.style.cssText +
+          `
+          max-width: 120px !important;
+          max-height: 40px !important;
+          width: auto !important;
+          height: auto !important;
+        `;
+        element.parentNode.replaceChild(logoImg, element);
+      });
+    });
+
+    console.log("✅ Custom logos replaced successfully");
+  } catch (error) {
+    console.warn("⚠️ Could not replace logos:", error.message);
+  }
+}
+
+/**
  * Injects custom CSS into the CCP iframe
  * @param {HTMLIFrameElement} iframe - The CCP iframe element
  */
 function injectCustomStyles(iframe) {
   try {
     // Wait for iframe to load
-    iframe.addEventListener('load', function() {
+    iframe.addEventListener("load", function () {
       try {
-        const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-        
+        const iframeDoc =
+          iframe.contentDocument || iframe.contentWindow.document;
+
         // Create style element
-        const styleElement = iframeDoc.createElement('style');
-        styleElement.type = 'text/css';
+        const styleElement = iframeDoc.createElement("style");
+        styleElement.type = "text/css";
         styleElement.innerHTML = getCustomCSS();
-        
+
         // Add to iframe head
-        const head = iframeDoc.head || iframeDoc.getElementsByTagName('head')[0];
+        const head =
+          iframeDoc.head || iframeDoc.getElementsByTagName("head")[0];
         head.appendChild(styleElement);
-        
-        console.log('✅ Custom CCP styles injected successfully');
+
+        // Replace logos after a short delay to ensure DOM is ready
+        setTimeout(() => {
+          replaceLogo(iframeDoc);
+
+          // Set up mutation observer to catch dynamically added logos
+          const observer = new MutationObserver(() => {
+            replaceLogo(iframeDoc);
+          });
+
+          observer.observe(iframeDoc.body, {
+            childList: true,
+            subtree: true,
+          });
+        }, 1000);
+
+        console.log("✅ Custom CCP styles injected successfully");
       } catch (error) {
-        console.warn('⚠️ Could not inject custom styles into CCP iframe (cross-origin restriction):', error.message);
+        console.warn(
+          "⚠️ Could not inject custom styles into CCP iframe (cross-origin restriction):",
+          error.message
+        );
         // This is expected for cross-origin iframes
       }
     });
   } catch (error) {
-    console.error('❌ Error setting up style injection:', error);
+    console.error("❌ Error setting up style injection:", error);
   }
 }
 
@@ -141,6 +227,33 @@ function getCustomCSS() {
   border-radius: 4px !important;
 }
 
+/* Logo replacement styles */
+.ping-custom-logo {
+  max-width: 120px !important;
+  max-height: 40px !important;
+  width: auto !important;
+  height: auto !important;
+}
+
+/* Hide default Amazon/AWS logos */
+.amazon-logo, .aws-logo, [class*="amazon"], [class*="aws"],
+svg[class*="logo"], img[alt*="amazon" i], img[alt*="aws" i],
+[class*="FlexVerticalCenterContainer"] svg {
+  display: none !important;
+}
+
+/* Replace FlexVerticalCenterContainer content */
+[class*="FlexVerticalCenterContainer"]::before {
+  content: "" !important;
+  display: inline-block !important;
+  width: 120px !important;
+  height: 40px !important;
+  background-image: url('./ping_q_logo.svg') !important;
+  background-size: contain !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+}
+
 /* Animation for state changes */
 .ccp-state-transition {
   transition: all 0.3s ease !important;
@@ -170,7 +283,7 @@ function getCustomCSS() {
  */
 function styleContainer(container) {
   if (!container) return;
-  
+
   // Apply custom styles to the container
   container.style.cssText = `
     border-radius: 8px;
@@ -179,21 +292,21 @@ function styleContainer(container) {
     background: #ffffff;
     border: 1px solid #e2e8f0;
   `;
-  
-  console.log('✅ Custom container styles applied');
+
+  console.log("✅ Custom container styles applied");
 }
 
 // Export functions
-if (typeof module !== 'undefined' && module.exports) {
+if (typeof module !== "undefined" && module.exports) {
   module.exports = {
     injectCustomStyles,
     styleContainer,
-    getCustomCSS
+    getCustomCSS,
   };
-} else if (typeof window !== 'undefined') {
+} else if (typeof window !== "undefined") {
   window.CCPStyleInjector = {
     injectCustomStyles,
     styleContainer,
-    getCustomCSS
+    getCustomCSS,
   };
 }
