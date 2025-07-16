@@ -33,7 +33,7 @@ The easiest way is to use the pre-built `connect-streams-min.js` file from the `
 ### 2. Build from Source
 ```bash
 # Clone this repository
-git clone https://github.com/c-cpt/amazon-connect-streams.git
+git clone https://github.com/ping-me-org/amazon-connect-streams.git
 cd amazon-connect-streams
 
 # Switch to custom styling branch
@@ -187,8 +187,8 @@ if (window.CCPStyleInjector) {
 ## 🔗 Links
 
 - **Original Repository**: [amazon-connect/amazon-connect-streams](https://github.com/amazon-connect/amazon-connect-streams)
-- **Your Fork**: [c-cpt/amazon-connect-streams](https://github.com/c-cpt/amazon-connect-streams)
-- **Custom Branch**: [custom-styling](https://github.com/c-cpt/amazon-connect-streams/tree/custom-styling)
+- **Your Fork**: [ping-me-org/amazon-connect-streams](https://github.com/ping-me-org/amazon-connect-streams)
+- **Custom Branch**: [custom-styling](https://github.com/ping-me-org/amazon-connect-streams/tree/custom-styling)
 
 ## 📄 License
 
