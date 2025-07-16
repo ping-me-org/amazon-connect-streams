@@ -11760,6 +11760,9 @@ function replaceLogo(iframeDoc) {
  */
 function injectCustomStyles(iframe) {
   try {
+    // Add global CSS for logo replacement (works outside iframe)
+    addGlobalLogoCSS();
+
     // Wait for iframe to load
     iframe.addEventListener("load", function () {
       try {
@@ -11814,7 +11817,23 @@ function styleContainer(container) {
 
   // Apply custom styles to the container
   container.style.cssText = "\n    border-radius: 8px;\n    overflow: hidden;\n    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);\n    background: #ffffff;\n    border: 1px solid #e2e8f0;\n  ";
+
+  // Add CSS to hide Amazon logos and show Ping logo
+  addGlobalLogoCSS();
   console.log("✅ Custom container styles applied");
+}
+
+/**
+ * Adds global CSS to hide Amazon logos and show Ping logo
+ */
+function addGlobalLogoCSS() {
+  // Check if CSS already added
+  if (document.getElementById("ping-logo-css")) return;
+  var style = document.createElement("style");
+  style.id = "ping-logo-css";
+  style.innerHTML = "\n    /* Hide ALL SVGs in CCP iframe */\n    iframe[src*=\"connect.aws\"] svg,\n    iframe[src*=\"my.connect.aws\"] svg {\n      display: none !important;\n      visibility: hidden !important;\n      opacity: 0 !important;\n    }\n\n    /* Style the iframe container to show Ping logo */\n    iframe[src*=\"connect.aws\"],\n    iframe[src*=\"my.connect.aws\"] {\n      position: relative;\n    }\n\n    /* Add Ping logo overlay on top of iframe */\n    iframe[src*=\"connect.aws\"]::before,\n    iframe[src*=\"my.connect.aws\"]::before {\n      content: \"\";\n      position: absolute;\n      top: 10px;\n      left: 10px;\n      width: 120px;\n      height: 40px;\n      background-image: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIwIiBoZWlnaHQ9IjQwIiB2aWV3Qm94PSIwIDAgNjkxIDg4NSIgdmVyc2lvbj0iMS4xIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiBzdHlsZT0ibWF4LXdpZHRoOiAxMDAlOyBtYXgtaGVpZ2h0OiAxMDAlOyI+PHRpdGxlPnBpbmdwaWxvdF9sb2dvPC90aXRsZT48ZGVmcz48cGF0aCBkPSJNMzQ0Ljk4NTksNjkwLjAzMjQgQzUzNS41MTY5LDY5MC4wMzI0IDY4OS45NzA5LDUzNS41NTk0IDY4OS45NzA5LDM0NS4wMDM0IEM2ODkuOTcwOSwxNTQuNDQ4NCA1MzUuNDkxOSwtMS4yNDM0NDk3OWUtMTQgMzQ0Ljk4NTksLTEuMjQzNDQ5NzllLTE0IEMxNTQuNDc4OSwtMS4yNDM0NDk3OWUtMTQgOC44ODE3ODQyZS0xNSwxNTQuNDczNCA4Ljg4MTc4NDJlLTE1LDM0NS4wMjg0IEM4Ljg4MTc4NDJlLTE1LDUzNS41ODQ0IDE1NC40NTM5LDY5MC4wNTc0IDM0NC45ODU5LDY5MC4wNTc0IEwzNDQuOTg1OSw2OTAuMDMyNCBaIE0zNTEuNjQ4OSw1MDkuMTc1NCBMMTgxLjMzMTksNTA5LjE3NTQgQzE3Ny40MDM5LDUwOS4xNzU0IDE3NS40NjM5LDUwNC40MjU0IDE3OC4yNDg5LDUwMS42NjU0IEwyMjcuMTMwOSw0NjEuNDgwNCBDMjI5LjI5MzksNDU5LjM0MjQgMjI5LjQxODksNDU1Ljg2MDQgMjI3LjQwNDksNDUzLjU3MjQgQzIyNS4yOTA5LDQ1MS4xNjA0IDIyMi44Mjk5LDQ0OC4zNTA0IDIyMS43ODQ5LDQ0Ny4wODI0IEMxOTcuNDkzOSw0MTcuMDE4NCAxODMuNDIwOSwzNzguMzUwNCAxODQuODYyOSwzMzYuMzc1NCBDMTg3Ljg0NTksMjQ5LjU4OTQgMjU4LjQzNDksMTc4LjcxODQgMzQ1LjE4NDksMTc1LjQzNjQgQzQ0MC4zMTM5LDE3MS44MzA0IDUxOC41ODQ5LDI0Ny44OTg0IDUxOC41ODQ5LDM0Mi4yNDM0IEM1MTguNTg0OSw0MzQuNDI1NCA0NDMuODY4OSw1MDkuMTc1NCAzNTEuNjczOSw1MDkuMTc1NCBMMzUxLjY0ODksNTA5LjE3NTQgWiIgaWQ9InBhdGgtMSI+PC9wYXRoPjwvZGVmcz48ZyBpZD0iUGFnZS0xIiBzdHJva2U9Im5vbmUiIHN0cm9rZS13aWR0aD0iMSIgZmlsbD0ibm9uZSIgZmlsbC1ydWxlPSJldmVub2RkIj48ZyBpZD0icGluZ3BpbG90X2xvZ28iPjxtYXNrIGlkPSJtYXNrLTIiIGZpbGw9IndoaXRlIj48dXNlIHhsaW5rOmhyZWY9IiNwYXRoLTEiPjwvdXNlPjwvbWFzaz48dXNlIGlkPSJNYXNrIiBmaWxsPSIjNURBREUyIiB4bGluazpocmVmPSIjcGF0aC0xIj48L3VzZT48L2c+PC9nPjwvc3ZnPg==');\n      background-size: contain;\n      background-repeat: no-repeat;\n      background-position: center;\n      z-index: 9999;\n      pointer-events: none;\n    }\n\n    /* Alternative: Add logo to the container div */\n    div[id*=\"container\"] {\n      position: relative;\n    }\n\n    div[id*=\"container\"]::before {\n      content: \"\";\n      position: absolute;\n      top: 10px;\n      left: 10px;\n      width: 120px;\n      height: 40px;\n      background-image: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIwIiBoZWlnaHQ9IjQwIiB2aWV3Qm94PSIwIDAgNjkxIDg4NSIgdmVyc2lvbj0iMS4xIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiBzdHlsZT0ibWF4LXdpZHRoOiAxMDAlOyBtYXgtaGVpZ2h0OiAxMDAlOyI+PHRpdGxlPnBpbmdwaWxvdF9sb2dvPC90aXRsZT48ZGVmcz48cGF0aCBkPSJNMzQ0Ljk4NTksNjkwLjAzMjQgQzUzNS41MTY5LDY5MC4wMzI0IDY4OS45NzA5LDUzNS41NTk0IDY4OS45NzA5LDM0NS4wMDM0IEM2ODkuOTcwOSwxNTQuNDQ4NCA1MzUuNDkxOSwtMS4yNDM0NDk3OWUtMTQgMzQ0Ljk4NTksLTEuMjQzNDQ5NzllLTE0IEMxNTQuNDc4OSwtMS4yNDM0NDk3OWUtMTQgOC44ODE3ODQyZS0xNSwxNTQuNDczNCA4Ljg4MTc4NDJlLTE1LDM0NS4wMjg0IEM4Ljg4MTc4NDJlLTE1LDUzNS41ODQ0IDE1NC40NTM5LDY5MC4wNTc0IDM0NC45ODU5LDY5MC4wNTc0IEwzNDQuOTg1OSw2OTAuMDMyNCBaIE0zNTEuNjQ4OSw1MDkuMTc1NCBMMTgxLjMzMTksNTA5LjE3NTQgQzE3Ny40MDM5LDUwOS4xNzU0IDE3NS40NjM5LDUwNC40MjU0IDE3OC4yNDg5LDUwMS42NjU0IEwyMjcuMTMwOSw0NjEuNDgwNCBDMjI5LjI5MzksNDU5LjM0MjQgMjI5LjQxODksNDU1Ljg2MDQgMjI3LjQwNDksNDUzLjU3MjQgQzIyNS4yOTA5LDQ1MS4xNjA0IDIyMi44Mjk5LDQ0OC4zNTA0IDIyMS43ODQ5LDQ0Ny4wODI0IEMxOTcuNDkzOSw0MTcuMDE4NCAxODMuNDIwOSwzNzguMzUwNCAxODQuODYyOSwzMzYuMzc1NCBDMTg3Ljg0NTksMjQ5LjU4OTQgMjU4LjQzNDksMTc4LjcxODQgMzQ1LjE4NDksMTc1LjQzNjQgQzQ0MC4zMTM5LDE3MS44MzA0IDUxOC41ODQ5LDI0Ny44OTg0IDUxOC41ODQ5LDM0Mi4yNDM0IEM1MTguNTg0OSw0MzQuNDI1NCA0NDMuODY4OSw1MDkuMTc1NCAzNTEuNjczOSw1MDkuMTc1NCBMMzUxLjY0ODksNTA5LjE3NTQgWiIgaWQ9InBhdGgtMSI+PC9wYXRoPjwvZGVmcz48ZyBpZD0iUGFnZS0xIiBzdHJva2U9Im5vbmUiIHN0cm9rZS13aWR0aD0iMSIgZmlsbD0ibm9uZSIgZmlsbC1ydWxlPSJldmVub2RkIj48ZyBpZD0icGluZ3BpbG90X2xvZ28iPjxtYXNrIGlkPSJtYXNrLTIiIGZpbGw9IndoaXRlIj48dXNlIHhsaW5rOmhyZWY9IiNwYXRoLTEiPjwvdXNlPjwvbWFzaz48dXNlIGlkPSJNYXNrIiBmaWxsPSIjNURBREUyIiB4bGluazpocmVmPSIjcGF0aC0xIj48L3VzZT48L2c+PC9nPjwvc3ZnPg==');\n      background-size: contain;\n      background-repeat: no-repeat;\n      background-position: center;\n      z-index: 9999;\n      pointer-events: none;\n    }\n  ";
+  document.head.appendChild(style);
+  console.log("✅ Global logo CSS added");
 }
 
 /**
