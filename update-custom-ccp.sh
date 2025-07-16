@@ -19,6 +19,7 @@ NC='\033[0m' # No Color
 FORK_DIR="/Users/chadcompton/dev/www/scorch/ping/external-repos/amazon-connect-streams"
 PROJECT_DIR="/Users/chadcompton/dev/www/scorch/ping/ping-mono/packages/forge-tel/src/frontend/connect-phone/public"
 CUSTOM_BRANCH="custom-styling"
+ORG_REPO="ping-me-org/amazon-connect-streams"
 
 # Function to print colored output
 print_status() {
